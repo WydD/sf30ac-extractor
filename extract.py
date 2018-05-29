@@ -1,4 +1,4 @@
-from bplist.bplist import BPListReader
+from bplist import BPListReader
 
 import os
 import sys
