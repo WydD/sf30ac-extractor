@@ -7,8 +7,8 @@ if len(sys.argv) != 3:
     print("Usage: python extract.py \"C:\\.....\\Street Fighter 30th Anniversary Collection\\Bundle\" \"C:\\...your extraction folder...\"")
     exit(1)
 
-root_dir = sys.argv[2]+"\\"
-root_bundles = sys.argv[1]+"\\"
+root_dir = sys.argv[2]+os.sep
+root_bundles = sys.argv[1]+os.sep
 
 if not os.path.exists(root_bundles + 'Manifest.plist'):
     print("Cant find the bundles, are you sure you're using this correctly? Read the README.")
@@ -29,7 +29,7 @@ with open(root_bundles + 'Manifest.plist', 'rb') as fp:
         print("Extracting", d)
         if not os.path.exists(extract_dir):
             os.mkdir(extract_dir)
-        extract_dir += "\\"
+        extract_dir += os.sep
         with open(root_bundles + d, "rb") as bundle:
             for name, offsets in content["files"].items():
                 bundle.seek(offsets["offset"])
