@@ -30,6 +30,7 @@
 
 import struct
 from datetime import datetime, timedelta
+import plistlib
 
 class BPListReader(object):
     def __init__(self, s):
@@ -198,13 +199,20 @@ class BPListReader(object):
     
     def parse(self):
         # read header
-        if self.data[:8] != b'bplist00':
+        if self.data[:5] == b'<?xml':
+            # load XML formated data and convert it
+            pl = {'bundles': {}}
+            for bundle in plistlib.loads(self.data)['bundles']:
+                pl['bundles'].update({bundle['bundleName']: {'files': bundle['files']}})
+            return pl
+        elif self.data[:8] != b'bplist00':
             raise Exception('Bad magic')
-        
+
         # read trailer
         self.offset_size, self.object_ref_size, self.number_of_objects, self.top_object, self.table_offset = struct.unpack('!BB4xI4xI4xI', self.data[-26:])
         self.top_object = self.table_offset - 8
-        #print ("** plist offset_size:",self.offset_size,"objref_size:",self.object_ref_size,"num_objs:",self.number_of_objects,"top:",self.top_object,"table_ofs:",self.table_offset)
+        #print("** plist offset_size: %d objref_size: %d num_objs: %d top: %d table_ofs: %d" % 
+        #     (self.offset_size, self.object_ref_size, self.number_of_objects, self.top_object, self.table_offset))
         
         # read offset table
         self.offset_table = self.data[self.table_offset:-26]
@@ -214,14 +222,14 @@ class BPListReader(object):
             offset_entry = ot[:self.offset_size]
             ot = ot[self.offset_size:]
             self.offsets.append(self.__unpackIntStruct(self.offset_size, offset_entry))
-        #print "** plist offsets:",self.offsets
+        #print("** plist offsets: %s" % (self.offsets))
         
         # read object table
         self.objects = []
         k = 0
         for i in self.offsets:
             obj = self.__unpackItem(i)
-            #print "** plist unpacked",k,type(obj),obj,"at",i
+            #print("** plist unpacked %d %s %s at %d" % (k, type(obj), obj, i))
             k += 1
             self.objects.append(obj)
         
